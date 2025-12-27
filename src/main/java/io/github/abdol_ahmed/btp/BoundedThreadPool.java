@@ -9,6 +9,16 @@ import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
 
+/**
+ * A thread pool implementation with a bounded queue and configurable rejection policies.
+ * 
+ * <p>This thread pool provides bounded capacity to prevent resource exhaustion and
+ * offers multiple strategies for handling task submission when the pool is at capacity.
+ * It supports graceful shutdown, task accounting, and monitoring capabilities.</p>
+ * 
+ * @author Abdullah Ahmed
+ * @since 1.0.0
+ */
 public final class BoundedThreadPool {
     private static final Logger logger = LoggerFactory.getLogger(BoundedThreadPool.class);
     

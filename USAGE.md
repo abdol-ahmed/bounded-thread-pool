@@ -4,28 +4,12 @@
 
 ### Add to your project
 
-#### Gradle
-```gradle
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-
-dependencies {
-    implementation 'io.github.abdol-ahmed.btp:bounded-thread-pool:1.0.0'
-}
-```
-
 #### Maven
 ```xml
-<repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
-</repository>
-
 <dependency>
-    <groupId>io.github.abdol-ahmed.btp</groupId>
+    <groupId>io.github.abdol_ahmed.btp</groupId>
     <artifactId>bounded-thread-pool</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
 </dependency>
 ```
 

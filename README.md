@@ -1,5 +1,9 @@
 # Bounded Thread Pool
 
+[![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
+[![Java 17+](https://img.shields.io/badge/Java-17+-green.svg)](https://openjdk.org/)
+[![Tests](https://img.shields.io/badge/Tests-31%20Passing-brightgreen.svg)](https://github.com/abdol-ahmed/bounded-thread-pool/actions)
+
 A lightweight, thread-safe bounded thread pool implementation in Java with support for various rejection policies and graceful shutdown semantics.
 
 ## Features
@@ -16,13 +20,26 @@ A lightweight, thread-safe bounded thread pool implementation in Java with suppo
 ## Requirements
 
 - JDK 17+
-- Gradle 7.0+
+- Maven 3.6.0+ (project uses Maven 3.9.x)
 
-## Quick Start - Test the Library
+## Installation
 
-### Simple Main Example
+### Maven Central
 
-Create a `Main.java` file to test the library:
+Add the following dependency to your project:
+
+#### Maven
+```xml
+<dependency>
+    <groupId>io.github.abdol-ahmed.btp</groupId>
+    <artifactId>bounded-thread-pool</artifactId>
+    <version>1.0.1</version>
+</dependency>
+```
+
+## Quick Start
+
+### Basic Example
 
 ```java
 import io.github.abdol_ahmed.btp.BoundedThreadPool;
@@ -31,13 +48,10 @@ import java.util.concurrent.TimeUnit;
 
 public class Main {
     public static void main(String[] args) throws InterruptedException {
-        // Create a thread pool with 4 workers and queue capacity of 10
+        // Create a thread pool with 4 workers
         BoundedThreadPool pool = BoundedThreadPool.createFixed(4);
         
-        System.out.println("Pool created with " + pool.getPoolSize() + " threads");
-        System.out.println("Queue capacity: " + pool.getQueueRemainingCapacity());
-        
-        // Submit some tasks
+        // Submit tasks
         int taskCount = 10;
         CountDownLatch done = new CountDownLatch(taskCount);
         
@@ -46,203 +60,20 @@ public class Main {
             pool.submit(() -> {
                 System.out.println("Task " + taskId + " running in " + 
                     Thread.currentThread().getName());
-                // Simulate some work
-                try {
-                    Thread.sleep(100);
-                } catch (InterruptedException e) {
-                    Thread.currentThread().interrupt();
-                }
                 done.countDown();
             });
         }
         
-        // Wait for all tasks to complete
+        // Wait for completion
         if (done.await(5, TimeUnit.SECONDS)) {
             System.out.println("All tasks completed!");
-        } else {
-            System.out.println("Tasks did not complete in time");
         }
         
-        // Shutdown the pool
+        // Shutdown
         pool.shutdown();
-        if (pool.awaitTermination(5, TimeUnit.SECONDS)) {
-            System.out.println("Pool shutdown successfully");
-        } else {
-            System.out.println("Pool did not shutdown in time");
-        }
+        pool.awaitTermination(5, TimeUnit.SECONDS);
     }
 }
-```
-
-### Compile and Run
-
-#### Using javac (without build tool):
-
-```bash
-# Download the JAR from JitPack
-wget https://jitpack.io/com/github/abdol-ahmed/bounded-thread-pool/1.0.0/bounded-thread-pool-1.0.0.jar
-
-# Compile
-javac -cp "bounded-thread-pool-1.0.0.jar" Main.java
-
-# Run
-java -cp ".:bounded-thread-pool-1.0.0.jar" Main
-```
-
-#### Using Gradle:
-
-Create `build.gradle`:
-```gradle
-plugins {
-    id 'java'
-}
-
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-
-dependencies {
-    implementation 'io.github.abdol_ahmed.btp:bounded-thread-pool:1.0.0'
-}
-
-task runMain(type: JavaExec) {
-    mainClass = 'Main'
-    classpath = sourceSets.main.runtimeClasspath
-}
-```
-
-#### Using Gradle with Kotlin DSL (build.gradle.kts):
-
-Create `build.gradle.kts`:
-```kotlin
-plugins {
-    java
-    application
-}
-
-repositories {
-    maven("https://jitpack.io")
-}
-
-dependencies {
-    implementation("io.github.abdol_ahmed.btp:bounded-thread-pool:1.0.0")
-}
-
-application {
-    mainClass.set("Main")
-}
-
-// Custom task to run the main example
-tasks.register<JavaExec>("runMain") {
-    group = "application"
-    description = "Run the Main example"
-    classpath = sourceSets["main"].runtimeClasspath
-    mainClass.set("Main")
-}
-```
-
-Run with:
-```bash
-# Using Groovy DSL
-./gradlew runMain
-
-# Using Kotlin DSL
-./gradlew runMain
-# or
-./gradlew run
-```
-
-#### Using Maven:
-
-Create `pom.xml`:
-```xml
-<project>
-    <modelVersion>4.0.0</modelVersion>
-    <groupId>com.example</groupId>
-    <artifactId>test-btp</artifactId>
-    <version>1.0</version>
-    
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
-    
-    <dependencies>
-        <dependency>
-            <groupId>io.github.abdol-ahmed.btp</groupId>
-            <artifactId>bounded-thread-pool</artifactId>
-            <version>1.0.0</version>
-        </dependency>
-    </dependencies>
-</project>
-```
-
-Run with:
-```bash
-mvn compile exec:java -Dexec.mainClass="Main"
-```
-
-### Expected Output
-
-```
-Pool created with 4 threads
-Queue capacity: 8
-Task 0 running in btp-worker-0
-Task 1 running in btp-worker-1
-Task 2 running in btp-worker-2
-Task 3 running in btp-worker-3
-Task 4 running in btp-worker-0
-Task 5 running in btp-worker-1
-Task 6 running in btp-worker-2
-Task 7 running in btp-worker-3
-Task 8 running in btp-worker-0
-Task 9 running in btp-worker-1
-All tasks completed!
-Pool shutdown successfully
-```
-
-## Installation
-
-### JitPack
-
-Add JitPack repository to your build file:
-
-#### Gradle
-```gradle
-repositories {
-    maven { url 'https://jitpack.io' }
-}
-
-dependencies {
-    implementation 'io.github.abdol_ahmed.btp:bounded-thread-pool:1.0.0'
-}
-```
-
-#### Gradle Kotlin DSL (build.gradle.kts)
-```kotlin
-repositories {
-    maven("https://jitpack.io")
-}
-
-dependencies {
-    implementation("io.github.abdol_ahmed.btp:bounded-thread-pool:1.0.0")
-}
-```
-
-#### Maven
-```xml
-<repository>
-    <id>jitpack.io</id>
-    <url>https://jitpack.io</url>
-</repository>
-
-<dependency>
-    <groupId>io.github.abdol_ahmed.btp</groupId>
-    <artifactId>bounded-thread-pool</artifactId>
-    <version>1.0.0</version>
-</dependency>
 ```
 
 ## Usage Examples
@@ -263,23 +94,25 @@ BoundedThreadPool pool = BoundedThreadPool.createCpuBound();
 BoundedThreadPool pool = BoundedThreadPool.createIoBound();
 ```
 
-### Basic Usage
+### Submitting Tasks
 
 ```java
-// Submit tasks
+// Submit a simple task
 pool.submit(() -> {
     System.out.println("Task executed in: " + Thread.currentThread().getName());
 });
 
-// Graceful shutdown
-pool.shutdown();
-pool.awaitTermination(5, TimeUnit.SECONDS);
+// Submit a task with parameters
+String message = "Hello";
+pool.submit(() -> {
+    System.out.println(message);
+});
 ```
 
 ### Rejection Policies
 
 ```java
-// BLOCK: Wait for space in queue (may block indefinitely)
+// BLOCK: Wait for space in queue (default)
 BoundedThreadPool pool1 = new BoundedThreadPool(2, 10, RejectionPolicy.BLOCK);
 
 // ABORT: Throw RejectedExecutionException if queue is full
@@ -323,17 +156,24 @@ System.out.println("Is shutdown? " + pool.isShutdown());
 System.out.println("Is terminated? " + pool.isTerminated());
 ```
 
-## Build and Test
+## Building from Source
 
 ```bash
+# Clone the repository
+git clone https://github.com/abdol-ahmed/bounded-thread-pool.git
+cd bounded-thread-pool
+
 # Build the project
-./gradlew build
+mvn clean compile
 
 # Run tests
-./gradlew test
+mvn test
 
-# Clean and test
-./gradlew clean test
+# Package JAR
+mvn package
+
+# Install to local repository
+mvn install
 ```
 
 ## Architecture
@@ -390,7 +230,7 @@ The project includes comprehensive tests covering:
 - Edge cases and error conditions
 - Stress testing
 
-Run tests with: `./gradlew test`
+Run tests with: `mvn test`
 
 ## Design Decisions
 
@@ -417,212 +257,7 @@ This project follows [Semantic Versioning](https://semver.org/).
 - **MINOR**: New functionality in a backward compatible manner
 - **PATCH**: Backward compatible bug fixes
 
-Current version: **1.0.0**
-
-## For Developers - Publishing New Versions
-
-### Prerequisites
-- Git installed and configured
-- GitHub access with push permissions
-- Personal Access Token (if using HTTPS)
-
-### Publishing Workflow
-
-1. **Make Your Changes**
-   ```bash
-   # Make your code changes
-   git add .
-   git commit -m "feat: Your feature description"
-   ```
-
-2. **Run Tests**
-   ```bash
-   ./gradlew test
-   # Ensure all tests pass before publishing
-   ```
-
-3. **Tag New Version**
-   ```bash
-   # Create a semantic version tag
-   git tag v1.0.1  # For patch version
-   git tag v1.1.0  # For minor version
-   git tag v2.0.0  # For major version
-   ```
-
-4. **Push to GitHub**
-   ```bash
-   # Push commits and tag
-   git push origin main
-   git push origin v1.0.1
-   ```
-
-5. **JitPack Build**
-   - JitPack automatically detects the new tag
-   - Go to [JitPack](https://jitpack.io) to monitor the build
-   - Wait for green status (usually 2-5 minutes)
-
-6. **Release is Live!**
-   - Your library is now available at the new version
-
-### Version Automation
-
-The project uses the Palantir git-version plugin:
-- **With tags**: Version resolves to tag (e.g., `v1.0.1`)
-- **Without tags**: Version shows commit hash (e.g., `abc1234.dirty`)
-
-### Authentication Issues
-
-If you get "Permission denied" errors:
-
-1. **Using Personal Access Token**:
-   ```bash
-   # Create token at https://github.com/settings/tokens
-   git remote set-url origin https://YOUR_TOKEN@github.com/abdol-ahmed/bounded-thread-pool.git
-   git push origin main v1.0.1
-   ```
-
-2. **Using SSH** (recommended for multiple accounts):
-   ```bash
-   git remote set-url origin git@github.com:abdol-ahmed/bounded-thread-pool.git
-   git push origin main v1.0.1
-   ```
-
-### Quick Publishing Script
-
-Create `scripts/publish.sh`:
-```bash
-#!/bin/bash
-set -e
-
-VERSION=$1
-if [ -z "$VERSION" ]; then
-    echo "Usage: ./scripts/publish.sh 1.0.1"
-    exit 1
-fi
-
-echo "Running tests..."
-./gradlew test
-
-echo "Creating tag v$VERSION..."
-git tag v$VERSION
-
-echo "Pushing to GitHub..."
-git push origin main
-git push origin v$VERSION
-
-echo "Published v$VERSION! Check JitPack for build status."
-```
-
-Usage:
-```bash
-./scripts/publish.sh 1.0.1
-```
-
-## Migration Guide
-
-### From v1.0.0 to v1.x.x
-
-No breaking changes expected. Minor versions will add new features while maintaining backward compatibility.
-
-### Breaking Changes (v2.0.0)
-
-When major version changes occur:
-1. Check the CHANGELOG for breaking changes
-2. Update your dependency version
-3. Update code that uses removed APIs
-4. Run tests with new version
-
-## Usage Examples
-
-### Web Server Example
-
-```java
-import io.github.abdol_ahmed.btp.BoundedThreadPool;
-
-public class WebServer {
-    private final BoundedThreadPool requestPool;
-    
-    public WebServer() {
-        // Optimize for I/O-bound requests
-        this.requestPool = BoundedThreadPool.createIoBound();
-    }
-    
-    public void handleRequest(Request request) {
-        try {
-            requestPool.submit(() -> {
-                processRequest(request);
-            });
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
-            throw new RuntimeException("Server shutdown", e);
-        }
-    }
-    
-    public void shutdown() {
-        requestPool.shutdown();
-        try {
-            if (!requestPool.awaitTermination(30, TimeUnit.SECONDS)) {
-                requestPool.shutdownNow();
-            }
-        } catch (InterruptedException e) {
-            requestPool.shutdownNow();
-            Thread.currentThread().interrupt();
-        }
-    }
-}
-```
-
-### Batch Processing Example
-
-```java
-import io.github.abdol_ahmed.btp.BoundedThreadPool;
-import io.github.abdol_ahmed.btp.RejectionPolicy;
-
-public class BatchProcessor {
-    public void processBatch(List<Item> items) {
-        // Use ABORT policy to fail fast if queue is full
-        BoundedThreadPool pool = new BoundedThreadPool(
-            Runtime.getRuntime().availableProcessors(),
-            100,
-            RejectionPolicy.ABORT
-        );
-        
-        try {
-            for (Item item : items) {
-                pool.submit(() -> item.process());
-            }
-        } finally {
-            pool.shutdown();
-            try {
-                pool.awaitTermination(1, TimeUnit.HOURS);
-            } catch (InterruptedException e) {
-                pool.shutdownNow();
-                Thread.currentThread().interrupt();
-            }
-        }
-    }
-}
-```
-
-### Rate Limiting Example
-
-```java
-import io.github.abdol_ahmed.btp.BoundedThreadPool;
-
-public class RateLimitedService {
-    private final BoundedThreadPool pool;
-    
-    public RateLimitedService() {
-        // Small pool with small queue for rate limiting
-        this.pool = new BoundedThreadPool(2, 10, RejectionPolicy.BLOCK);
-    }
-    
-    public void submitTask(Runnable task) throws InterruptedException {
-        // Will block if too many tasks are queued
-        pool.submit(task);
-    }
-}
-```
+Current version: **1.0.1**
 
 ## Best Practices
 
@@ -657,31 +292,6 @@ public class RateLimitedService {
    }
    ```
 
-## Troubleshooting
-
-### Common Issues
-
-1. **"Could not complete execution for Gradle Test Executor"**
-   - Reduce task counts in tests
-   - Ensure `shutdownNow()` is used in tearDown
-   - Check for resource leaks
-
-2. **Permission Denied on Push**
-   - Use Personal Access Token
-   - Check GitHub permissions
-   - Consider SSH authentication
-
-3. **JitPack Build Fails**
-   - Check build logs on JitPack
-   - Ensure `gradle.properties` exists
-   - Verify all dependencies are public
-
-### Getting Help
-
-- Check [USAGE.md](USAGE.md) for detailed examples
-- Review test cases for usage patterns
-- Open an issue on GitHub for bugs
-
 ## License
 
 Apache License 2.0
@@ -696,3 +306,19 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 4. Add tests for new functionality
 5. Ensure all tests pass
 6. Submit a pull request
+
+### Project Maintainer
+
+- **Abdullah Ahmed** (abdol-ahmed)
+- Email: abdol.ahmed@gmail.com
+
+### Build Requirements
+
+- **Maven**: 3.6.0+
+- **Java**: 17+
+- **Test Framework**: JUnit 5.10.0
+
+## Additional Resources
+
+- [USAGE.md](USAGE.md) - Detailed usage examples
+- [VERSIONING.md](VERSIONING.md) - Version management guide
