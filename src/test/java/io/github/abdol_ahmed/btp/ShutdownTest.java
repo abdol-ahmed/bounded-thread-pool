@@ -1,161 +1,166 @@
 package io.github.abdol_ahmed.btp;
 
-import org.junit.jupiter.api.AfterEach;
-import org.junit.jupiter.api.Test;
+import static org.junit.jupiter.api.Assertions.*;
 
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.atomic.AtomicInteger;
-
-import static org.junit.jupiter.api.Assertions.*;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.Test;
 
 class ShutdownTest {
 
-    private BoundedThreadPool pool;
+  private BoundedThreadPool pool;
 
-    @AfterEach
-    void tearDown() throws InterruptedException {
-        if (pool != null) {
-            BoundedThreadPoolTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
-        }
+  @AfterEach
+  void tearDown() throws InterruptedException {
+    if (pool != null) {
+      BoundedThreadPoolTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
     }
+  }
 
-    @Test
-    void shutdownRejectsNewSubmissions() {
-        pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
-        
-        pool.shutdown();
-        
-        assertThrows(RejectedExecutionException.class, () -> {
-            pool.submit(() -> {});
+  @Test
+  void shutdownRejectsNewSubmissions() {
+    pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
+
+    pool.shutdown();
+
+    assertThrows(
+        RejectedExecutionException.class,
+        () -> {
+          pool.submit(() -> {});
         });
+  }
+
+  @Test
+  void shutdownCompletesQueuedTasks() throws Exception {
+    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
+    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    AtomicInteger completedCount = new AtomicInteger(0);
+
+    // Submit blocking task
+    pool.submit(
+        BoundedThreadPoolTestSupport.createBlockingTask(latches, completedCount::incrementAndGet));
+
+    assertTrue(latches.started.await(1, TimeUnit.SECONDS));
+
+    // Submit tasks to queue
+    for (int i = 0; i < 3; i++) {
+      pool.submit(completedCount::incrementAndGet);
     }
 
-    @Test
-    void shutdownCompletesQueuedTasks() throws Exception {
-        pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
-        var latches = BoundedThreadPoolTestSupport.createTaskLatches();
-        AtomicInteger completedCount = new AtomicInteger(0);
+    pool.shutdown();
 
-        // Submit blocking task
-        pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, completedCount::incrementAndGet));
-        
-        assertTrue(latches.started.await(1, TimeUnit.SECONDS));
+    // Release the blocking task
+    latches.finish.countDown();
 
-        // Submit tasks to queue
-        for (int i = 0; i < 3; i++) {
-            pool.submit(completedCount::incrementAndGet);
-        }
+    // With graceful shutdown, all queued tasks should complete
+    // Wait for all tasks to finish
+    Thread.sleep(500);
 
-        pool.shutdown();
-        
-        // Release the blocking task
-        latches.finish.countDown();
-        
-        // With graceful shutdown, all queued tasks should complete
-        // Wait for all tasks to finish
-        Thread.sleep(500);
-        
-        // All tasks should complete with graceful shutdown
-        assertEquals(4, completedCount.get(), "All tasks should complete with graceful shutdown");
+    // All tasks should complete with graceful shutdown
+    assertEquals(4, completedCount.get(), "All tasks should complete with graceful shutdown");
+  }
+
+  @Test
+  void shutdownNowReturnsQueuedTasks() throws Exception {
+    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
+    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+
+    // Submit blocking task
+    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
+    assertTrue(latches.started.await(1, TimeUnit.SECONDS));
+
+    // Submit tasks to queue
+    for (int i = 0; i < 3; i++) {
+      final int taskId = i;
+      pool.submit(
+          () -> {
+            // This should not execute
+          });
     }
 
-    @Test
-    void shutdownNowReturnsQueuedTasks() throws Exception {
-        pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
-        var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    // Shutdown now should return queued tasks
+    List<Runnable> remaining = pool.shutdownNow();
+    assertEquals(3, remaining.size());
 
-        // Submit blocking task
-        pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
-        assertTrue(latches.started.await(1, TimeUnit.SECONDS));
+    latches.finish.countDown();
+  }
 
-        // Submit tasks to queue
-        for (int i = 0; i < 3; i++) {
-            final int taskId = i;
-            pool.submit(() -> {
-                // This should not execute
-            });
-        }
+  @Test
+  void awaitTerminationWaitsForAllWorkers() throws Exception {
+    pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
+    var latches1 = BoundedThreadPoolTestSupport.createTaskLatches();
+    var latches2 = BoundedThreadPoolTestSupport.createTaskLatches();
 
-        // Shutdown now should return queued tasks
-        List<Runnable> remaining = pool.shutdownNow();
-        assertEquals(3, remaining.size());
-        
-        latches.finish.countDown();
-    }
+    // Submit blocking tasks to both workers
+    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches1, null));
+    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches2, null));
 
-    @Test
-    void awaitTerminationWaitsForAllWorkers() throws Exception {
-        pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
-        var latches1 = BoundedThreadPoolTestSupport.createTaskLatches();
-        var latches2 = BoundedThreadPoolTestSupport.createTaskLatches();
+    assertTrue(latches1.started.await(1, TimeUnit.SECONDS));
+    assertTrue(latches2.started.await(1, TimeUnit.SECONDS));
 
-        // Submit blocking tasks to both workers
-        pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches1, null));
-        pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches2, null));
-        
-        assertTrue(latches1.started.await(1, TimeUnit.SECONDS));
-        assertTrue(latches2.started.await(1, TimeUnit.SECONDS));
+    pool.shutdown();
 
-        pool.shutdown();
-        
-        // With graceful shutdown, workers should finish all queued tasks
-        // So awaitTermination should wait for tasks to complete
-        // But since tasks are blocked, it should timeout
-        assertFalse(pool.awaitTermination(100, TimeUnit.MILLISECONDS));
-        
-        // Release tasks
-        latches1.finish.countDown();
-        latches2.finish.countDown();
-        
-        // Now awaitTermination should succeed
-        assertTrue(pool.awaitTermination(1, TimeUnit.SECONDS));
-    }
+    // With graceful shutdown, workers should finish all queued tasks
+    // So awaitTermination should wait for tasks to complete
+    // But since tasks are blocked, it should timeout
+    assertFalse(pool.awaitTermination(100, TimeUnit.MILLISECONDS));
 
-    @Test
-    void shutdownInterruptsWorkers() throws Exception {
-        pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
-        AtomicInteger interruptedCount = new AtomicInteger(0);
+    // Release tasks
+    latches1.finish.countDown();
+    latches2.finish.countDown();
 
-        // Submit task that checks for interruption
-        pool.submit(() -> {
-            try {
-                Thread.sleep(500); // Reduced from 5000ms
-            } catch (InterruptedException e) {
-                interruptedCount.incrementAndGet();
-                Thread.currentThread().interrupt();
-            }
+    // Now awaitTermination should succeed
+    assertTrue(pool.awaitTermination(1, TimeUnit.SECONDS));
+  }
+
+  @Test
+  void shutdownInterruptsWorkers() throws Exception {
+    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
+    AtomicInteger interruptedCount = new AtomicInteger(0);
+
+    // Submit task that checks for interruption
+    pool.submit(
+        () -> {
+          try {
+            Thread.sleep(500); // Reduced from 5000ms
+          } catch (InterruptedException e) {
+            interruptedCount.incrementAndGet();
+            Thread.currentThread().interrupt();
+          }
         });
 
-        Thread.sleep(100); // Let task start
-        
-        pool.shutdown();
-        
-        // With graceful shutdown, worker should NOT be interrupted
-        // It should continue running until sleep finishes
-        Thread.sleep(600); // Let the task finish naturally
-        
-        // Task should have completed without interruption
-        assertEquals(0, interruptedCount.get(), "Worker should not be interrupted by graceful shutdown");
-        
-        // Pool should terminate after task completes
-        assertTrue(pool.awaitTermination(1, TimeUnit.SECONDS));
-    }
+    Thread.sleep(100); // Let task start
 
-    @Test
-    void introspectionMethodsAreCallable() throws Exception {
-        pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
+    pool.shutdown();
 
-        assertEquals(PoolState.RUNNING, pool.getPoolState());
-        assertEquals(2, pool.getPoolSize());
-        assertEquals(0, pool.getQueueSize());
-        assertEquals(5, pool.getQueueRemainingCapacity());
-        assertFalse(pool.isQueueFull());
-        assertFalse(pool.isTerminated());
+    // With graceful shutdown, worker should NOT be interrupted
+    // It should continue running until sleep finishes
+    Thread.sleep(600); // Let the task finish naturally
 
-        pool.shutdown();
-        assertTrue(pool.awaitTermination(1, TimeUnit.SECONDS));
-        assertTrue(pool.isTerminated());
-    }
+    // Task should have completed without interruption
+    assertEquals(
+        0, interruptedCount.get(), "Worker should not be interrupted by graceful shutdown");
+
+    // Pool should terminate after task completes
+    assertTrue(pool.awaitTermination(1, TimeUnit.SECONDS));
+  }
+
+  @Test
+  void introspectionMethodsAreCallable() throws Exception {
+    pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
+
+    assertEquals(PoolState.RUNNING, pool.getPoolState());
+    assertEquals(2, pool.getPoolSize());
+    assertEquals(0, pool.getQueueSize());
+    assertEquals(5, pool.getQueueRemainingCapacity());
+    assertFalse(pool.isQueueFull());
+    assertFalse(pool.isTerminated());
+
+    pool.shutdown();
+    assertTrue(pool.awaitTermination(1, TimeUnit.SECONDS));
+    assertTrue(pool.isTerminated());
+  }
 }
