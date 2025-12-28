@@ -367,6 +367,10 @@ public final class BoundedThreadPool {
     @Override
     public void run() {
       while (true) {
+        if (poolState == PoolState.STOP) {
+          return;
+        }
+
         Runnable task;
         try {
           task = blockingQueue.take();
