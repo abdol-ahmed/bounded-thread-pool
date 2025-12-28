@@ -16,6 +16,9 @@ jobs:
         with:
           java-version: '17'
           distribution: 'temurin'
+          server-id: central
+          server-username: ${{ secrets.CENTRAL_USERNAME }}
+          server-password: ${{ secrets.CENTRAL_PASSWORD }}
           
       - name: Cache Maven packages
         uses: actions/cache@v3
