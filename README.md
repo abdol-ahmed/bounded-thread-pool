@@ -6,7 +6,7 @@
 [![Qodana](https://github.com/abdol-ahmed/bounded-thread-pool/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/abdol-ahmed/bounded-thread-pool/actions/workflows/qodana_code_quality.yml)
 [![Maven Central](https://img.shields.io/maven-central/v/io.github.abdol-ahmed.btp/bounded-thread-pool.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.abdol-ahmed.btp/bounded-thread-pool)
 [![Maven Central](https://img.shields.io/maven-central/last-update/io.github.abdol-ahmed.btp/bounded-thread-pool)](https://central.sonatype.com/artifact/io.github.abdol-ahmed.btp/bounded-thread-pool)
-[![Javadoc](https://javadoc.io/badge2/io.github.abdol-ahmed.btp/bounded-thread-pool/javadoc.svg)](https://javadoc.io/doc/io.github.abdol-ahmed.btp/bounded-thread-pool)
+[![javadoc](https://javadoc.io/badge2/io.github.abdol-ahmed.btp/bounded-thread-pool/javadoc.svg)](https://javadoc.io/doc/io.github.abdol-ahmed.btp/bounded-thread-pool)
 [![Release](https://img.shields.io/github/v/release/abdol-ahmed/bounded-thread-pool?sort=semver)](https://github.com/abdol-ahmed/bounded-thread-pool/releases)
 [![Issues](https://img.shields.io/github/issues/abdol-ahmed/bounded-thread-pool)](https://github.com/abdol-ahmed/bounded-thread-pool/issues)
 [![Stars](https://img.shields.io/github/stars/abdol-ahmed/bounded-thread-pool?style=social)](https://github.com/abdol-ahmed/bounded-thread-pool/stargazers)
