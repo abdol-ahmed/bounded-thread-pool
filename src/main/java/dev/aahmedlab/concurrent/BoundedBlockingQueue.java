@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;

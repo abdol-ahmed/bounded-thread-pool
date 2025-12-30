@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -10,22 +10,22 @@ import org.junit.jupiter.api.Test;
 
 class RejectionPolicyTest {
 
-  private BoundedThreadPool pool;
+  private BoundedExecutor pool;
 
   @AfterEach
   void tearDown() throws InterruptedException {
     if (pool != null) {
-      BoundedThreadPoolTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
+      BoundedExecutorTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
     }
   }
 
   @Test
   void abortPolicyRejectsWhenQueueFull() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createAbortPool(1, 1);
-    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createAbortPool(1, 1);
+    var latches = BoundedExecutorTestSupport.createTaskLatches();
 
     // Submit first task that blocks
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches, null));
 
     // Wait for first task to start
     assertTrue(latches.started.await(1, TimeUnit.SECONDS));
@@ -41,14 +41,14 @@ class RejectionPolicyTest {
 
   @Test
   void discardPolicySilentlyDropsWhenQueueFull() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createDiscardPool(1, 1);
-    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createDiscardPool(1, 1);
+    var latches = BoundedExecutorTestSupport.createTaskLatches();
 
     CountDownLatch acceptedRan = new CountDownLatch(1);
     CountDownLatch discardedRan = new CountDownLatch(1);
 
     // Submit blocking task
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches, null));
     assertTrue(latches.started.await(1, TimeUnit.SECONDS));
 
     // This should be accepted into queue
@@ -65,15 +65,15 @@ class RejectionPolicyTest {
 
   @Test
   void discardOldestPolicyDropsOldestWhenQueueFull() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createDiscardOldestPool(1, 2);
-    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createDiscardOldestPool(1, 2);
+    var latches = BoundedExecutorTestSupport.createTaskLatches();
 
     CountDownLatch oldestRan = new CountDownLatch(1);
     CountDownLatch newerRan = new CountDownLatch(1);
     CountDownLatch latestRan = new CountDownLatch(1);
 
     // Submit blocking task
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches, null));
     assertTrue(latches.started.await(1, TimeUnit.SECONDS));
 
     // Submit tasks to fill queue
@@ -94,15 +94,15 @@ class RejectionPolicyTest {
 
   @Test
   void callerRunsPolicyExecutesInCallerThread() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createCallerRunsPool(1, 1);
-    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createCallerRunsPool(1, 1);
+    var latches = BoundedExecutorTestSupport.createTaskLatches();
 
     CountDownLatch workerTaskRan = new CountDownLatch(1);
     CountDownLatch callerTaskRan = new CountDownLatch(1);
     Thread testThread = Thread.currentThread();
 
     // Submit blocking task
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches, null));
     assertTrue(latches.started.await(1, TimeUnit.SECONDS));
 
     // Submit task that should run in worker

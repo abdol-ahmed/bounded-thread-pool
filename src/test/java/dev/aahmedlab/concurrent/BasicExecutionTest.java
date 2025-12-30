@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -13,18 +13,18 @@ import org.junit.jupiter.api.Test;
 
 class BasicExecutionTest {
 
-  private BoundedThreadPool pool;
+  private BoundedExecutor pool;
 
   @AfterEach
   void tearDown() throws InterruptedException {
     if (pool != null) {
-      BoundedThreadPoolTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
+      BoundedExecutorTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
     }
   }
 
   @Test
   void executesAllSubmittedTasks() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(4, 1000);
+    pool = BoundedExecutorTestSupport.createBlockingPool(4, 1000);
 
     int n = 100;
     CountDownLatch done = new CountDownLatch(n);
@@ -43,9 +43,9 @@ class BasicExecutionTest {
   }
 
   @Test
-  void usesAtMostPoolSizeThreads() throws Exception {
+  void usesAtMostExecutorSizeThreads() throws Exception {
     int poolSize = 3;
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(poolSize, 1000);
+    pool = BoundedExecutorTestSupport.createBlockingPool(poolSize, 1000);
 
     int n = 50;
     CountDownLatch start = new CountDownLatch(1);
@@ -69,6 +69,7 @@ class BasicExecutionTest {
 
     start.countDown();
     assertTrue(done.await(2, TimeUnit.SECONDS), "tasks did not finish in time");
-    assertTrue(threadNames.size() <= poolSize, "Used more threads than poolSize: " + threadNames);
+    assertTrue(
+        threadNames.size() <= poolSize, "Used more threads than executorSize: " + threadNames);
   }
 }

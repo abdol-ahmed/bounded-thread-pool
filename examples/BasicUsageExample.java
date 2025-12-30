@@ -1,23 +1,23 @@
 package examples;
 
-import io.github.abdol_ahmed.btp.BoundedThreadPool;
-import io.github.abdol_ahmed.btp.RejectionPolicy;
+import dev.aahmedlab.concurrent.BoundedExecutor;
+import dev.aahmedlab.concurrent.RejectionPolicy;
 
 /**
- * Example demonstrating basic usage of BoundedThreadPool.
+ * Example demonstrating basic usage of BoundedExecutor.
  * This is not part of the API - just a demonstration.
  */
 public class BasicUsageExample {
     public static void main(String[] args) {
-        // Create a thread pool using factory method
-        BoundedThreadPool threadPool = BoundedThreadPool.createFixed(4);
+        // Create a bounded executor using factory method
+        BoundedExecutor executor = BoundedExecutor.createFixed(4);
         
         // Submit tasks
         for (int i = 0; i < 100; i++) {
             final int taskId = i;
             
             try {
-                threadPool.submit(() -> {
+                executor.submit(() -> {
                     System.out.println("Task " + taskId + " running in " + 
                         Thread.currentThread().getName());
                 });
@@ -28,8 +28,8 @@ public class BasicUsageExample {
             }
         }
         
-        // Shutdown the pool
-        threadPool.shutdown();
+        // Shutdown the executor
+        executor.shutdown();
         try {
             threadPool.awaitTermination(5, java.util.concurrent.TimeUnit.SECONDS);
         } catch (InterruptedException e) {

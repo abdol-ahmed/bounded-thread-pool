@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -14,12 +14,12 @@ import org.junit.jupiter.api.Test;
 class StressTest {
 
   private static final int STRESS_THREAD_COUNT = Runtime.getRuntime().availableProcessors() * 2;
-  private BoundedThreadPool pool;
+  private BoundedExecutor pool;
 
   @BeforeEach
   void setUp() {
     // Create a moderately sized pool for stress tests
-    pool = new BoundedThreadPool(STRESS_THREAD_COUNT, 1000, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(STRESS_THREAD_COUNT, 1000, RejectionPolicy.BLOCK);
   }
 
   @AfterEach
@@ -128,7 +128,7 @@ class StressTest {
   void extremeQueueCapacityTest() throws Exception {
     // Test with large but reasonable queue capacity
     int largeCapacity = 100_000;
-    BoundedThreadPool testPool = new BoundedThreadPool(2, largeCapacity, RejectionPolicy.ABORT);
+    BoundedExecutor testPool = new BoundedExecutor(2, largeCapacity, RejectionPolicy.ABORT);
 
     try {
       // Should be able to submit many tasks without blocking
@@ -151,7 +151,7 @@ class StressTest {
   @Test
   void minimalConfigurationStress() throws Exception {
     // Test with minimal valid configuration
-    BoundedThreadPool testPool = new BoundedThreadPool(1, 1, RejectionPolicy.CALLER_RUNS);
+    BoundedExecutor testPool = new BoundedExecutor(1, 1, RejectionPolicy.CALLER_RUNS);
 
     try {
       int taskCount = 100;

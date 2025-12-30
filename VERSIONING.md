@@ -17,7 +17,7 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
 
 #### 1.0.0
 - Initial release
-- Core BoundedThreadPool implementation
+- Core BoundedExecutor implementation
 - BoundedBlockingQueue with configurable capacity
 - Five rejection policies: BLOCK, ABORT, DISCARD, DISCARD_OLDEST, CALLER_RUNS
 - Graceful shutdown (shutdown()) and immediate shutdown (shutdownNow())
@@ -37,8 +37,8 @@ This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PAT
 #### Maven
 ```xml
 <dependency>
-    <groupId>io.github.abdol_ahmed.btp</groupId>
-    <artifactId>bounded-thread-pool</artifactId>
+    <groupId>dev.aahmedlab</groupId>
+    <artifactId>bounded-executor</artifactId>
     <version>1.0.1</version>
 </dependency>
 ```

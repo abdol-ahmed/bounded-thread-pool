@@ -1,17 +1,17 @@
-# Bounded Thread Pool
+# Bounded Executor
 
 [![License: Apache 2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
 [![Java 17+](https://img.shields.io/badge/Java-17+-green.svg)](https://openjdk.org/)
-[![CI](https://github.com/abdol-ahmed/bounded-thread-pool/actions/workflows/ci.yml/badge.svg)](https://github.com/abdol-ahmed/bounded-thread-pool/actions/workflows/ci.yml)
-[![Qodana](https://github.com/abdol-ahmed/bounded-thread-pool/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/abdol-ahmed/bounded-thread-pool/actions/workflows/qodana_code_quality.yml)
-[![Maven Central](https://img.shields.io/maven-central/v/io.github.abdol-ahmed.btp/bounded-thread-pool.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/io.github.abdol-ahmed.btp/bounded-thread-pool)
-[![Maven Central](https://img.shields.io/maven-central/last-update/io.github.abdol-ahmed.btp/bounded-thread-pool)](https://central.sonatype.com/artifact/io.github.abdol-ahmed.btp/bounded-thread-pool)
-[![javadoc](https://javadoc.io/badge2/io.github.abdol-ahmed.btp/bounded-thread-pool/javadoc.svg)](https://javadoc.io/doc/io.github.abdol-ahmed.btp/bounded-thread-pool)
-[![Release](https://img.shields.io/github/v/release/abdol-ahmed/bounded-thread-pool?sort=semver)](https://github.com/abdol-ahmed/bounded-thread-pool/releases)
-[![Issues](https://img.shields.io/github/issues/abdol-ahmed/bounded-thread-pool)](https://github.com/abdol-ahmed/bounded-thread-pool/issues)
-[![Stars](https://img.shields.io/github/stars/abdol-ahmed/bounded-thread-pool?style=social)](https://github.com/abdol-ahmed/bounded-thread-pool/stargazers)
+[![CI](https://github.com/aahmedlab/bounded-executor/actions/workflows/ci.yml/badge.svg)](https://github.com/aahmedlab/bounded-executor/actions/workflows/ci.yml)
+[![Qodana](https://github.com/aahmedlab/bounded-executor/actions/workflows/qodana_code_quality.yml/badge.svg)](https://github.com/aahmedlab/bounded-executor/actions/workflows/qodana_code_quality.yml)
+[![Maven Central](https://img.shields.io/maven-central/v/dev.aahmedlab/bounded-executor.svg?label=Maven%20Central)](https://central.sonatype.com/artifact/dev.aahmedlab/bounded-executor)
+[![Maven Central](https://img.shields.io/maven-central/last-update/dev.aahmedlab/bounded-executor)](https://central.sonatype.com/artifact/dev.aahmedlab/bounded-executor)
+[![javadoc](https://javadoc.io/badge2/dev.aahmedlab/bounded-executor/javadoc.svg)](https://javadoc.io/doc/dev.aahmedlab/bounded-executor)
+[![Release](https://img.shields.io/github/v/release/aahmedlab/bounded-executor?sort=semver)](https://github.com/aahmedlab/bounded-executor/releases)
+[![Issues](https://img.shields.io/github/issues/aahmedlab/bounded-executor)](https://github.com/aahmedlab/bounded-executor/issues)
+[![Stars](https://img.shields.io/github/stars/aahmedlab/bounded-executor?style=social)](https://github.com/aahmedlab/bounded-executor/stargazers)
 
-A lightweight, thread-safe bounded thread pool implementation in Java with support for various rejection policies and graceful shutdown semantics.
+A lightweight, thread-safe bounded executor implementation in Java with support for various rejection policies and graceful shutdown semantics.
 
 ## Features
 
@@ -40,8 +40,8 @@ Add the following dependency to your project:
 #### Maven
 ```xml
 <dependency>
-    <groupId>io.github.abdol-ahmed.btp</groupId>
-    <artifactId>bounded-thread-pool</artifactId>
+    <groupId>dev.aahmedlab</groupId>
+    <artifactId>bounded-executor</artifactId>
     <version>1.0.1</version>
 </dependency>
 ```
@@ -53,37 +53,38 @@ If you're looking for the latest version, check the GitHub tags and Maven Centra
 ### Basic Example
 
 ```java
-import io.github.abdol_ahmed.btp.BoundedThreadPool;
+import dev.aahmedlab.concurrent.BoundedExecutor;
+
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
 public class Main {
-    public static void main(String[] args) throws InterruptedException {
-        // Create a thread pool with 4 workers
-        BoundedThreadPool pool = BoundedThreadPool.createFixed(4);
-        
-        // Submit tasks
-        int taskCount = 10;
-        CountDownLatch done = new CountDownLatch(taskCount);
-        
-        for (int i = 0; i < taskCount; i++) {
-            final int taskId = i;
-            pool.submit(() -> {
-                System.out.println("Task " + taskId + " running in " + 
+   public static void main(String[] args) throws InterruptedException {
+      // Create a bounded executor with 4 workers
+      BoundedExecutor pool = BoundedExecutor.createFixed(4);
+
+      // Submit tasks
+      int taskCount = 10;
+      CountDownLatch done = new CountDownLatch(taskCount);
+
+      for (int i = 0; i < taskCount; i++) {
+         final int taskId = i;
+         pool.submit(() -> {
+            System.out.println("Task " + taskId + " running in " +
                     Thread.currentThread().getName());
-                done.countDown();
-            });
-        }
-        
-        // Wait for completion
-        if (done.await(5, TimeUnit.SECONDS)) {
-            System.out.println("All tasks completed!");
-        }
-        
-        // Shutdown
-        pool.shutdown();
-        pool.awaitTermination(5, TimeUnit.SECONDS);
-    }
+            done.countDown();
+         });
+      }
+
+      // Wait for completion
+      if (done.await(5, TimeUnit.SECONDS)) {
+         System.out.println("All tasks completed!");
+      }
+
+      // Shutdown
+      pool.shutdown();
+      pool.awaitTermination(5, TimeUnit.SECONDS);
+   }
 }
 ```
 
@@ -92,17 +93,17 @@ public class Main {
 ### Factory Methods (Recommended)
 
 ```java
-// Create a pool with default BLOCK policy
-BoundedThreadPool pool = BoundedThreadPool.create(4, 100);
+// Create a bounded executor with default BLOCK policy
+BoundedExecutor pool = BoundedExecutor.create(4, 100);
 
-// Create a fixed-size pool with CALLER_RUNS policy
-BoundedThreadPool pool = BoundedThreadPool.createFixed(8);
+// Create a fixed-size executor with CALLER_RUNS policy
+BoundedExecutor pool = BoundedExecutor.createFixed(8);
 
-// Create a pool optimized for CPU-bound tasks
-BoundedThreadPool pool = BoundedThreadPool.createCpuBound();
+// Create an executor optimized for CPU-bound tasks
+BoundedExecutor pool = BoundedExecutor.createCpuBound();
 
-// Create a pool optimized for I/O-bound tasks
-BoundedThreadPool pool = BoundedThreadPool.createIoBound();
+// Create an executor optimized for I/O-bound tasks
+BoundedExecutor pool = BoundedExecutor.createIoBound();
 ```
 
 ### Submitting Tasks
@@ -124,19 +125,19 @@ pool.submit(() -> {
 
 ```java
 // BLOCK: Wait for space in queue (default)
-BoundedThreadPool pool1 = new BoundedThreadPool(2, 10, RejectionPolicy.BLOCK);
+BoundedExecutor pool1 = new BoundedExecutor(2, 10, RejectionPolicy.BLOCK);
 
 // ABORT: Throw RejectedExecutionException if queue is full
-BoundedThreadPool pool2 = new BoundedThreadPool(2, 10, RejectionPolicy.ABORT);
+BoundedExecutor pool2 = new BoundedExecutor(2, 10, RejectionPolicy.ABORT);
 
 // DISCARD: Silently discard task if queue is full
-BoundedThreadPool pool3 = new BoundedThreadPool(2, 10, RejectionPolicy.DISCARD);
+BoundedExecutor pool3 = new BoundedExecutor(2, 10, RejectionPolicy.DISCARD);
 
 // DISCARD_OLDEST: Remove oldest task and add new one if queue is full
-BoundedThreadPool pool4 = new BoundedThreadPool(2, 10, RejectionPolicy.DISCARD_OLDEST);
+BoundedExecutor pool4 = new BoundedExecutor(2, 10, RejectionPolicy.DISCARD_OLDEST);
 
 // CALLER_RUNS: Execute task in caller thread if queue is full
-BoundedThreadPool pool5 = new BoundedThreadPool(2, 10, RejectionPolicy.CALLER_RUNS);
+BoundedExecutor pool5 = new BoundedExecutor(2, 10, RejectionPolicy.CALLER_RUNS);
 ```
 
 ### Shutdown Patterns
@@ -171,8 +172,8 @@ System.out.println("Is terminated? " + pool.isTerminated());
 
 ```bash
 # Clone the repository
-git clone https://github.com/abdol-ahmed/bounded-thread-pool.git
-cd bounded-thread-pool
+git clone https://github.com/aahmedlab/bounded-executor.git
+cd bounded-executor
 
 # Build the project
 mvn -B -ntp clean compile
@@ -194,12 +195,12 @@ mvn install
 
 ### Core Components
 
-- **`BoundedThreadPool`**: Main thread pool implementation
+- **`BoundedExecutor`**: Main bounded executor implementation
 - **`BoundedBlockingQueue`**: Internal bounded queue (package-private)
 - **`PoolState`**: Internal pool state enum (package-private)
 - **`RejectionPolicy`**: Enum defining task rejection strategies
 
-### Thread Pool States
+### Bounded Executor States
 
 1. **RUNNING**: Accepts new tasks and executes them
 2. **SHUTDOWN**: Rejects new tasks, completes queued tasks gracefully
@@ -285,7 +286,7 @@ Versions are published using git tags in the form `vX.Y.Z`.
 
 2. **Always Shutdown**:
    ```java
-   try (BoundedThreadPool pool = BoundedThreadPool.createFixed(4)) {
+   try (BoundedExecutor pool = BoundedExecutor.createFixed(4)) {
        // Use pool
    } // Automatically calls shutdown()
    ```

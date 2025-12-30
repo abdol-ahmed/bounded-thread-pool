@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,7 +11,7 @@ import org.junit.jupiter.api.Test;
 
 class EdgeCaseTest {
 
-  private BoundedThreadPool pool;
+  private BoundedExecutor pool;
 
   @AfterEach
   void tearDown() throws InterruptedException {
@@ -23,7 +23,7 @@ class EdgeCaseTest {
 
   @Test
   void singleThreadSingleCapacity() throws Exception {
-    pool = new BoundedThreadPool(1, 1, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(1, 1, RejectionPolicy.BLOCK);
 
     AtomicInteger executionCount = new AtomicInteger(0);
     CountDownLatch taskDone = new CountDownLatch(1);
@@ -46,7 +46,7 @@ class EdgeCaseTest {
 
   @Test
   void zeroCapacityQueueWithBlockPolicy() throws Exception {
-    pool = new BoundedThreadPool(2, 1, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(2, 1, RejectionPolicy.BLOCK);
 
     // With minimal capacity and BLOCK policy, submit should block when queue is full
     AtomicInteger executedTasks = new AtomicInteger(0);
@@ -69,7 +69,7 @@ class EdgeCaseTest {
   void maximumCapacityQueue() throws Exception {
     // Test with large capacity (but not Integer.MAX_VALUE)
     int largeCapacity = 1_000_000;
-    pool = new BoundedThreadPool(1, largeCapacity, RejectionPolicy.ABORT);
+    pool = new BoundedExecutor(1, largeCapacity, RejectionPolicy.ABORT);
 
     // Should be able to submit many tasks without blocking
     int taskCount = 1000;
@@ -89,7 +89,7 @@ class EdgeCaseTest {
   @Test
   void minimumValidParameters() throws Exception {
     // Test with minimum valid values
-    pool = new BoundedThreadPool(1, 1, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(1, 1, RejectionPolicy.BLOCK);
 
     assertEquals(1, pool.getPoolSize());
     assertEquals(0, pool.getQueueSize());
@@ -102,7 +102,7 @@ class EdgeCaseTest {
   void extremeThreadCount() throws Exception {
     // Test with many threads
     int threadCount = Runtime.getRuntime().availableProcessors() * 4;
-    pool = new BoundedThreadPool(threadCount, 10, RejectionPolicy.CALLER_RUNS);
+    pool = new BoundedExecutor(threadCount, 10, RejectionPolicy.CALLER_RUNS);
 
     assertEquals(threadCount, pool.getPoolSize());
 
@@ -136,7 +136,7 @@ class EdgeCaseTest {
     int capacity = 5;
     int taskCount = poolSize + capacity; // 7 tasks
 
-    pool = new BoundedThreadPool(poolSize, capacity, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(poolSize, capacity, RejectionPolicy.BLOCK);
     AtomicInteger completed = new AtomicInteger(0);
     CountDownLatch allDone = new CountDownLatch(taskCount);
 
@@ -156,7 +156,7 @@ class EdgeCaseTest {
   @Test
   void rapidShutdownAfterCreation() throws Exception {
     // Create pool and immediately shutdown
-    pool = new BoundedThreadPool(4, 10, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(4, 10, RejectionPolicy.BLOCK);
     pool.shutdownNow(); // Need to shutdown first
 
     assertTrue(
@@ -166,7 +166,7 @@ class EdgeCaseTest {
 
   @Test
   void shutdownWithoutTasks() throws Exception {
-    pool = new BoundedThreadPool(2, 10, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(2, 10, RejectionPolicy.BLOCK);
 
     // Shutdown without submitting any tasks
     pool.shutdown();
@@ -177,7 +177,7 @@ class EdgeCaseTest {
 
   @Test
   void submitNullTask() throws Exception {
-    pool = new BoundedThreadPool(1, 10, RejectionPolicy.ABORT);
+    pool = new BoundedExecutor(1, 10, RejectionPolicy.ABORT);
 
     assertThrows(
         NullPointerException.class,
@@ -188,7 +188,7 @@ class EdgeCaseTest {
 
   @Test
   void submitAfterShutdown() throws Exception {
-    pool = new BoundedThreadPool(1, 10, RejectionPolicy.ABORT);
+    pool = new BoundedExecutor(1, 10, RejectionPolicy.ABORT);
 
     pool.shutdown();
 
@@ -204,7 +204,7 @@ class EdgeCaseTest {
 
   @Test
   void submitAfterShutdownNow() throws Exception {
-    pool = new BoundedThreadPool(1, 10, RejectionPolicy.ABORT);
+    pool = new BoundedExecutor(1, 10, RejectionPolicy.ABORT);
 
     pool.shutdownNow();
 
@@ -220,7 +220,7 @@ class EdgeCaseTest {
 
   @Test
   void awaitTerminationWithoutShutdown() throws Exception {
-    pool = new BoundedThreadPool(2, 10, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(2, 10, RejectionPolicy.BLOCK);
 
     // awaitTermination should return false if pool is running
     assertFalse(pool.awaitTermination(100, TimeUnit.MILLISECONDS));
@@ -229,7 +229,7 @@ class EdgeCaseTest {
 
   @Test
   void multipleShutdownCalls() throws Exception {
-    pool = new BoundedThreadPool(2, 10, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(2, 10, RejectionPolicy.BLOCK);
 
     pool.shutdown();
     assertEquals(PoolState.SHUTDOWN, pool.getPoolState());
@@ -244,7 +244,7 @@ class EdgeCaseTest {
 
   @Test
   void discardOldestOnEmptyQueue() throws Exception {
-    pool = new BoundedThreadPool(1, 1, RejectionPolicy.DISCARD_OLDEST);
+    pool = new BoundedExecutor(1, 1, RejectionPolicy.DISCARD_OLDEST);
 
     // Submit task to empty queue with DISCARD_OLDEST
     AtomicInteger executed = new AtomicInteger(0);
@@ -262,7 +262,7 @@ class EdgeCaseTest {
 
   @Test
   void callerRunsWithBlockingTask() throws Exception {
-    pool = new BoundedThreadPool(1, 1, RejectionPolicy.CALLER_RUNS);
+    pool = new BoundedExecutor(1, 1, RejectionPolicy.CALLER_RUNS);
 
     // Fill pool and queue
     CountDownLatch firstTaskStarted = new CountDownLatch(1);
@@ -303,7 +303,7 @@ class EdgeCaseTest {
 
   @Test
   void extremeTaskDurationVariation() throws Exception {
-    pool = new BoundedThreadPool(4, 100, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(4, 100, RejectionPolicy.BLOCK);
 
     int taskCount = 50;
     CountDownLatch allDone = new CountDownLatch(taskCount);

@@ -2,7 +2,7 @@
 
 ## Overview
 
-This document outlines the concurrency techniques, design patterns, and implementation strategies used in the Bounded Thread Pool project. The implementation demonstrates several advanced concurrency concepts in Java while maintaining thread safety, performance, and clean API design.
+This document outlines the concurrency techniques, design patterns, and implementation strategies used in the Bounded Executor project. The implementation demonstrates several advanced concurrency concepts in Java while maintaining thread safety, performance, and clean API design.
 
 ## Core Architecture
 
@@ -11,7 +11,7 @@ This document outlines the concurrency techniques, design patterns, and implemen
 The implementation follows a modular design with clear separation of concerns:
 
 ```
-BoundedThreadPool (Public API)
+BoundedExecutor (Public API)
 ├── BoundedBlockingQueue (Internal)
 ├── PoolState (Internal Enum)
 ├── RejectionPolicy (Public Enum)
@@ -55,7 +55,7 @@ if (rejectionPolicy == RejectionPolicy.BLOCK) {
 
 **Problem Solved**: Traditional implementations that hold the pool lock while blocking on queue operations can cause deadlocks when shutdown occurs concurrently.
 
-**Solution**: Handle the BLOCK policy outside the pool lock scope, allowing shutdown operations to proceed even when threads are blocked on queue insertion.
+**Solution**: Handle the BLOCK policy outside the executor lock scope, allowing shutdown operations to proceed even when threads are blocked on queue insertion.
 
 ### 3. Producer-Consumer Pattern with Bounded Buffer
 
@@ -164,14 +164,14 @@ enum PoolState {
 ### 1. Factory Method Pattern
 
 ```java
-public static BoundedThreadPool createCpuBound() {
+public static BoundedExecutor createCpuBound() {
     int processors = Runtime.getRuntime().availableProcessors();
-    return new BoundedThreadPool(processors, processors, RejectionPolicy.CALLER_RUNS);
+    return new BoundedExecutor(processors, processors, RejectionPolicy.CALLER_RUNS);
 }
 
-public static BoundedThreadPool createIoBound() {
+public static BoundedExecutor createIoBound() {
     int processors = Runtime.getRuntime().availableProcessors();
-    return new BoundedThreadPool(processors * 2, processors * 10, RejectionPolicy.BLOCK);
+    return new BoundedExecutor(processors * 2, processors * 10, RejectionPolicy.BLOCK);
 }
 ```
 
@@ -257,7 +257,7 @@ try {
 }
 ```
 
-**Design Principle**: Individual task failures don't crash worker threads or the pool.
+**Design Principle**: Individual task failures don't crash worker threads or the executor.
 
 ### 2. Interrupt Handling
 
@@ -293,7 +293,7 @@ All state modifications are protected by appropriate locks to ensure consistency
 
 ## Design Trade-offs
 
-### 1. Fixed Thread Pool Size
+### 1. Fixed Executor Size
 **Trade-off**: Simplicity and predictability vs. dynamic adaptation
 **Rationale**: Fixed size eliminates complex scaling logic and resource management overhead
 
@@ -314,7 +314,7 @@ The BLOCK policy handling outside the pool lock was a crucial design decision to
 Even with four simple states, managing transitions correctly requires careful attention to race conditions and visibility.
 
 ### 3. Error Isolation Matters
-Worker threads must be resilient to individual task failures to maintain pool stability.
+Worker threads must be resilient to individual task failures to maintain executor stability.
 
 ### 4. Testing is Essential
 Comprehensive concurrent testing is necessary to verify correctness under various timing scenarios.
