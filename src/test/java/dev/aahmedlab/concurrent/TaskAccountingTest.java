@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -12,11 +12,11 @@ import org.junit.jupiter.api.Test;
 
 class TaskAccountingTest {
 
-  private BoundedThreadPool pool;
+  private BoundedExecutor pool;
 
   @BeforeEach
   void setUp() {
-    pool = new BoundedThreadPool(4, 100, RejectionPolicy.BLOCK);
+    pool = new BoundedExecutor(4, 100, RejectionPolicy.BLOCK);
   }
 
   @AfterEach
@@ -242,7 +242,7 @@ class TaskAccountingTest {
   @Test
   void zeroCapacityQueueAccounting() throws Exception {
     // Create pool with minimal queue capacity (1, since 0 is not allowed)
-    BoundedThreadPool zeroQueuePool = new BoundedThreadPool(2, 1, RejectionPolicy.CALLER_RUNS);
+    BoundedExecutor zeroQueuePool = new BoundedExecutor(2, 1, RejectionPolicy.CALLER_RUNS);
 
     try {
       AtomicInteger executedInPool = new AtomicInteger(0);

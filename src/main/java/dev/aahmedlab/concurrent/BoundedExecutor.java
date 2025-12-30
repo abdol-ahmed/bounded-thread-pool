@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -9,17 +9,17 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 /**
- * A thread pool implementation with a bounded queue and configurable rejection policies.
+ * A bounded executor implementation with a bounded queue and configurable rejection policies.
  *
- * <p>This thread pool provides bounded capacity to prevent resource exhaustion and offers multiple
- * strategies for handling task submission when the pool is at capacity. It supports graceful
- * shutdown, task accounting, and monitoring capabilities.
+ * <p>This bounded executor provides bounded capacity to prevent resource exhaustion and offers
+ * multiple strategies for handling task submission when the executor is at capacity. It supports
+ * graceful shutdown, task accounting, and monitoring capabilities.
  *
  * @author Abdullah Ahmed
  * @since 1.0.0
  */
-public final class BoundedThreadPool {
-  private static final Logger logger = LoggerFactory.getLogger(BoundedThreadPool.class);
+public final class BoundedExecutor {
+  private static final Logger logger = LoggerFactory.getLogger(BoundedExecutor.class);
 
   private final BoundedBlockingQueue<Runnable> blockingQueue;
   private final RejectionPolicy rejectionPolicy;
@@ -28,7 +28,7 @@ public final class BoundedThreadPool {
   private volatile PoolState poolState;
 
   /**
-   * Creates a bounded thread pool with the specified parameters.
+   * Creates a bounded executor with the specified parameters.
    *
    * @param poolSize the number of worker threads
    * @param capacity the maximum number of tasks that can be queued
@@ -36,7 +36,7 @@ public final class BoundedThreadPool {
    * @throws IllegalArgumentException if poolSize or capacity is less than or equal to 0
    * @since 1.0.0
    */
-  public BoundedThreadPool(int poolSize, int capacity, RejectionPolicy rejectionPolicy) {
+  public BoundedExecutor(int poolSize, int capacity, RejectionPolicy rejectionPolicy) {
     if (poolSize <= 0) throw new IllegalArgumentException("poolSize must be > 0");
     if (capacity <= 0) throw new IllegalArgumentException("capacity must be > 0");
     this.blockingQueue = new BoundedBlockingQueue<>(capacity);
@@ -53,62 +53,62 @@ public final class BoundedThreadPool {
   }
 
   /**
-   * Creates a bounded thread pool with a BLOCK rejection policy. This is the most common
-   * configuration for bounded thread pools.
+   * Creates a bounded executor with a BLOCK rejection policy. This is the most common configuration
+   * for bounded executors.
    *
    * @param poolSize the number of worker threads
    * @param capacity the maximum number of tasks that can be queued
-   * @return a new BoundedThreadPool instance
+   * @return a new BoundedExecutor instance
    * @throws IllegalArgumentException if poolSize or capacity is less than or equal to 0
    * @since 1.0.0
    */
-  public static BoundedThreadPool create(int poolSize, int capacity) {
-    return new BoundedThreadPool(poolSize, capacity, RejectionPolicy.BLOCK);
+  public static BoundedExecutor create(int poolSize, int capacity) {
+    return new BoundedExecutor(poolSize, capacity, RejectionPolicy.BLOCK);
   }
 
   /**
-   * Creates a fixed-size thread pool with a bounded queue. The queue capacity is twice the pool
-   * size, providing a good balance between throughput and memory usage.
+   * Creates a fixed-size executor with a bounded queue. The queue capacity is twice the pool size,
+   * providing a good balance between throughput and memory usage.
    *
    * @param poolSize the number of worker threads
-   * @return a new BoundedThreadPool instance
+   * @return a new BoundedExecutor instance
    * @throws IllegalArgumentException if poolSize is less than or equal to 0
    * @since 1.0.0
    */
-  public static BoundedThreadPool createFixed(int poolSize) {
-    return new BoundedThreadPool(poolSize, poolSize * 2, RejectionPolicy.CALLER_RUNS);
+  public static BoundedExecutor createFixed(int poolSize) {
+    return new BoundedExecutor(poolSize, poolSize * 2, RejectionPolicy.CALLER_RUNS);
   }
 
   /**
-   * Creates a thread pool optimized for CPU-bound tasks. Uses the number of available processors as
+   * Creates an executor optimized for CPU-bound tasks. Uses the number of available processors as
    * the pool size with a small bounded queue.
    *
-   * @return a new BoundedThreadPool instance optimized for CPU-bound tasks
+   * @return a new BoundedExecutor instance optimized for CPU-bound tasks
    * @since 1.0.0
    */
-  public static BoundedThreadPool createCpuBound() {
+  public static BoundedExecutor createCpuBound() {
     int processors = Runtime.getRuntime().availableProcessors();
-    return new BoundedThreadPool(processors, processors, RejectionPolicy.CALLER_RUNS);
+    return new BoundedExecutor(processors, processors, RejectionPolicy.CALLER_RUNS);
   }
 
   /**
-   * Creates a thread pool optimized for I/O-bound tasks. Uses twice the number of available
+   * Creates an executor optimized for I/O-bound tasks. Uses twice the number of available
    * processors as the pool size with a larger bounded queue.
    *
-   * @return a new BoundedThreadPool instance optimized for I/O-bound tasks
+   * @return a new BoundedExecutor instance optimized for I/O-bound tasks
    * @since 1.0.0
    */
-  public static BoundedThreadPool createIoBound() {
+  public static BoundedExecutor createIoBound() {
     int processors = Runtime.getRuntime().availableProcessors();
-    return new BoundedThreadPool(processors * 2, processors * 10, RejectionPolicy.BLOCK);
+    return new BoundedExecutor(processors * 2, processors * 10, RejectionPolicy.BLOCK);
   }
 
   /**
-   * Submits a task for execution in the thread pool.
+   * Submits a task for execution in the bounded executor.
    *
    * @param task the task to execute
    * @throws NullPointerException if task is null
-   * @throws RejectedExecutionException if the pool is shut down or the queue is full (for ABORT
+   * @throws RejectedExecutionException if the executor is shut down or the queue is full (for ABORT
    *     policy)
    * @throws InterruptedException if the thread is interrupted while waiting (for BLOCK policy)
    * @since 1.0.0
@@ -118,13 +118,13 @@ public final class BoundedThreadPool {
 
     if (rejectionPolicy == RejectionPolicy.BLOCK) {
       if (poolState != PoolState.RUNNING) {
-        throw new RejectedExecutionException("Pool is shut down");
+        throw new RejectedExecutionException("Executor is shut down");
       }
       try {
         blockingQueue.put(task);
 
       } catch (IllegalStateException stateException) {
-        throw new RejectedExecutionException("Pool is shut down", stateException);
+        throw new RejectedExecutionException("Executor is shut down", stateException);
       } catch (InterruptedException interruptedExc) {
         throw interruptedExc;
       }
@@ -136,7 +136,7 @@ public final class BoundedThreadPool {
     poolLock.lock();
     try {
       if (poolState != PoolState.RUNNING) {
-        throw new RejectedExecutionException("Pool is shut down");
+        throw new RejectedExecutionException("Executor is shut down");
       }
 
       switch (rejectionPolicy) {
@@ -170,7 +170,7 @@ public final class BoundedThreadPool {
   }
 
   /**
-   * Initiates a graceful shutdown of the thread pool.
+   * Initiates a graceful shutdown of the bounded executor.
    *
    * <p>This method:
    *
@@ -194,7 +194,7 @@ public final class BoundedThreadPool {
   }
 
   /**
-   * Initiates an immediate shutdown of the thread pool.
+   * Initiates an immediate shutdown of the bounded executor.
    *
    * <p>This method:
    *

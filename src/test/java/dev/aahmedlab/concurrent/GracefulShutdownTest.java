@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,7 +16,7 @@ public class GracefulShutdownTest {
     final AtomicInteger completedTasks = new AtomicInteger(0);
     final CountDownLatch allTasksDone = new CountDownLatch(TASK_COUNT);
 
-    BoundedThreadPool pool = new BoundedThreadPool(POOL_SIZE, TASK_COUNT, RejectionPolicy.BLOCK);
+    BoundedExecutor pool = new BoundedExecutor(POOL_SIZE, TASK_COUNT, RejectionPolicy.BLOCK);
 
     // Submit tasks that take a short time
     for (int i = 0; i < TASK_COUNT; i++) {
@@ -55,7 +55,7 @@ public class GracefulShutdownTest {
     final AtomicInteger completedTasks = new AtomicInteger(0);
     final AtomicInteger interruptedTasks = new AtomicInteger(0);
 
-    BoundedThreadPool pool = new BoundedThreadPool(POOL_SIZE, TASK_COUNT, RejectionPolicy.BLOCK);
+    BoundedExecutor pool = new BoundedExecutor(POOL_SIZE, TASK_COUNT, RejectionPolicy.BLOCK);
 
     // Submit long-running tasks
     for (int i = 0; i < TASK_COUNT; i++) {

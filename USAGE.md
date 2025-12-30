@@ -1,4 +1,4 @@
-# BoundedThreadPool Usage Guide
+# BoundedExecutor Usage Guide
 
 ## Quick Start
 
@@ -7,8 +7,8 @@
 #### Maven
 ```xml
 <dependency>
-    <groupId>io.github.abdol_ahmed.btp</groupId>
-    <artifactId>bounded-thread-pool</artifactId>
+    <groupId>dev.aahmedlab</groupId>
+    <artifactId>bounded-executor</artifactId>
     <version>1.0.1</version>
 </dependency>
 ```
@@ -18,24 +18,24 @@
 ### 1. Using Factory Methods (Recommended)
 
 ```java
-// Create a pool with default BLOCK policy
-BoundedThreadPool pool = BoundedThreadPool.create(4, 100);
+// Create a bounded executor with default BLOCK policy
+BoundedExecutor pool = BoundedExecutor.create(4, 100);
 
-// Create a fixed-size pool with CALLER_RUNS policy
-BoundedThreadPool pool = BoundedThreadPool.createFixed(8);
+// Create a fixed-size executor with CALLER_RUNS policy
+BoundedExecutor pool = BoundedExecutor.createFixed(8);
 
-// Create a pool optimized for CPU-bound tasks
-BoundedThreadPool pool = BoundedThreadPool.createCpuBound();
+// Create an executor optimized for CPU-bound tasks
+BoundedExecutor pool = BoundedExecutor.createCpuBound();
 
-// Create a pool optimized for I/O-bound tasks
-BoundedThreadPool pool = BoundedThreadPool.createIoBound();
+// Create an executor optimized for I/O-bound tasks
+BoundedExecutor pool = BoundedExecutor.createIoBound();
 ```
 
 ### 2. Manual Configuration
 
 ```java
 // Custom configuration with ABORT policy
-BoundedThreadPool pool = new BoundedThreadPool(
+BoundedExecutor pool = new BoundedExecutor(
     4,                    // pool size
     100,                  // queue capacity
     RejectionPolicy.ABORT // rejection policy
@@ -74,31 +74,31 @@ pool.awaitTermination(5, TimeUnit.SECONDS);
 ### BLOCK (Default)
 ```java
 // Blocks the calling thread until space is available
-BoundedThreadPool pool = BoundedThreadPool.create(4, 10);
+BoundedExecutor pool = BoundedExecutor.create(4, 10);
 ```
 
 ### ABORT
 ```java
 // Throws RejectedExecutionException when queue is full
-BoundedThreadPool pool = new BoundedThreadPool(4, 10, RejectionPolicy.ABORT);
+BoundedExecutor pool = new BoundedExecutor(4, 10, RejectionPolicy.ABORT);
 ```
 
 ### DISCARD
 ```java
 // Silently discards the task when queue is full
-BoundedThreadPool pool = new BoundedThreadPool(4, 10, RejectionPolicy.DISCARD);
+BoundedExecutor pool = new BoundedExecutor(4, 10, RejectionPolicy.DISCARD);
 ```
 
 ### DISCARD_OLDEST
 ```java
 // Removes the oldest task and adds the new one
-BoundedThreadPool pool = new BoundedThreadPool(4, 10, RejectionPolicy.DISCARD_OLDEST);
+BoundedExecutor pool = new BoundedExecutor(4, 10, RejectionPolicy.DISCARD_OLDEST);
 ```
 
 ### CALLER_RUNS
 ```java
 // Runs the task in the calling thread when queue is full
-BoundedThreadPool pool = new BoundedThreadPool(4, 10, RejectionPolicy.CALLER_RUNS);
+BoundedExecutor pool = new BoundedExecutor(4, 10, RejectionPolicy.CALLER_RUNS);
 ```
 
 ## Best Practices
@@ -115,7 +115,7 @@ BoundedThreadPool pool = new BoundedThreadPool(4, 10, RejectionPolicy.CALLER_RUN
 
 3. **Always shutdown**:
    ```java
-   try (BoundedThreadPool pool = BoundedThreadPool.createFixed(4)) {
+   try (BoundedExecutor pool = BoundedExecutor.createFixed(4)) {
        // Use pool
    } // Automatically calls shutdown()
    ```
@@ -145,11 +145,11 @@ System.out.println("Pool state: " + pool.getPoolState());
 
 ```java
 public class WebServer {
-    private final BoundedThreadPool requestPool;
+    private final BoundedExecutor requestPool;
     
     public WebServer() {
         // Optimize for I/O-bound requests
-        this.requestPool = BoundedThreadPool.createIoBound();
+        this.requestPool = BoundedExecutor.createIoBound();
     }
     
     public void handleRequest(Request request) {
@@ -179,7 +179,7 @@ public class WebServer {
 
 ## Comparison with Executors
 
-| Feature | BoundedThreadPool | ThreadPoolExecutor |
+| Feature | BoundedExecutor | ThreadPoolExecutor |
 |---------|-------------------|-------------------|
 | Bounded Queue | ✅ Built-in | ⚠️ Optional |
 | Rejection Policies | ✅ 5 policies | ✅ 4 policies |

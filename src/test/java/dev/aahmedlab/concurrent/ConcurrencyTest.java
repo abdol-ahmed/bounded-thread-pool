@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -16,18 +16,18 @@ import org.junit.jupiter.api.Test;
 @Tag("slow")
 class ConcurrencyTest {
 
-  private BoundedThreadPool pool;
+  private BoundedExecutor pool;
 
   @AfterEach
   void tearDown() throws InterruptedException {
     if (pool != null) {
-      BoundedThreadPoolTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
+      BoundedExecutorTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
     }
   }
 
   @Test
   void exactlyOnceExecutionUnderManyProducers() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(4, 10000);
+    pool = BoundedExecutorTestSupport.createBlockingPool(4, 10000);
 
     int producers = 4;
     int perProducer = 100;
@@ -69,7 +69,7 @@ class ConcurrencyTest {
 
   @Test
   void preservesOrderPerProducer() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 10000);
+    pool = BoundedExecutorTestSupport.createBlockingPool(1, 10000);
 
     int n = 500;
     CountDownLatch done = new CountDownLatch(n);

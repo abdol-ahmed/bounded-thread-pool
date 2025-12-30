@@ -1,31 +1,31 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
-/** Utility class providing common factory methods and test patterns for BoundedThreadPool tests. */
-public class BoundedThreadPoolTestSupport {
+/** Utility class providing common factory methods and test patterns for BoundedExecutor tests. */
+public class BoundedExecutorTestSupport {
 
   // Factory methods for different pool configurations
 
-  public static BoundedThreadPool createBlockingPool(int poolSize, int capacity) {
-    return new BoundedThreadPool(poolSize, capacity, RejectionPolicy.BLOCK);
+  public static BoundedExecutor createBlockingPool(int poolSize, int capacity) {
+    return new BoundedExecutor(poolSize, capacity, RejectionPolicy.BLOCK);
   }
 
-  public static BoundedThreadPool createAbortPool(int poolSize, int capacity) {
-    return new BoundedThreadPool(poolSize, capacity, RejectionPolicy.ABORT);
+  public static BoundedExecutor createAbortPool(int poolSize, int capacity) {
+    return new BoundedExecutor(poolSize, capacity, RejectionPolicy.ABORT);
   }
 
-  public static BoundedThreadPool createDiscardPool(int poolSize, int capacity) {
-    return new BoundedThreadPool(poolSize, capacity, RejectionPolicy.DISCARD);
+  public static BoundedExecutor createDiscardPool(int poolSize, int capacity) {
+    return new BoundedExecutor(poolSize, capacity, RejectionPolicy.DISCARD);
   }
 
-  public static BoundedThreadPool createDiscardOldestPool(int poolSize, int capacity) {
-    return new BoundedThreadPool(poolSize, capacity, RejectionPolicy.DISCARD_OLDEST);
+  public static BoundedExecutor createDiscardOldestPool(int poolSize, int capacity) {
+    return new BoundedExecutor(poolSize, capacity, RejectionPolicy.DISCARD_OLDEST);
   }
 
-  public static BoundedThreadPool createCallerRunsPool(int poolSize, int capacity) {
-    return new BoundedThreadPool(poolSize, capacity, RejectionPolicy.CALLER_RUNS);
+  public static BoundedExecutor createCallerRunsPool(int poolSize, int capacity) {
+    return new BoundedExecutor(poolSize, capacity, RejectionPolicy.CALLER_RUNS);
   }
 
   // Common test patterns
@@ -60,7 +60,7 @@ public class BoundedThreadPoolTestSupport {
    * Ensures pool shutdown and waits for termination. Returns true if all workers terminated within
    * timeout.
    */
-  public static boolean shutdownAndAwait(BoundedThreadPool pool, long timeout, TimeUnit unit)
+  public static boolean shutdownAndAwait(BoundedExecutor pool, long timeout, TimeUnit unit)
       throws InterruptedException {
     pool.shutdown();
     return pool.awaitTermination(timeout, unit);

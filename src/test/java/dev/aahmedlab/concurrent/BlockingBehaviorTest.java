@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -8,22 +8,22 @@ import org.junit.jupiter.api.Test;
 
 class BlockingBehaviorTest {
 
-  private BoundedThreadPool pool;
+  private BoundedExecutor pool;
 
   @AfterEach
   void tearDown() throws InterruptedException {
     if (pool != null) {
-      BoundedThreadPoolTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
+      BoundedExecutorTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
     }
   }
 
   @Test
   void submitBlocksWhenQueueFullAndUnblocksWhenSpaceAvailable() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 1);
-    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createBlockingPool(1, 1);
+    var latches = BoundedExecutorTestSupport.createTaskLatches();
 
     // Submit blocking task
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches, null));
 
     // Fill the queue
     pool.submit(() -> {});
@@ -55,11 +55,11 @@ class BlockingBehaviorTest {
 
   @Test
   void blockedSubmitIsInterruptible() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 1);
-    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createBlockingPool(1, 1);
+    var latches = BoundedExecutorTestSupport.createTaskLatches();
 
     // Submit blocking task
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches, null));
 
     // Fill capacity
     pool.submit(() -> {});

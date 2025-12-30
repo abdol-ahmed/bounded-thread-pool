@@ -6,14 +6,14 @@
     <!-- Project metadata -->
     <modelVersion>4.0.0</modelVersion>
     
-    <groupId>io.github.abdol-ahmed.btp</groupId>
-    <artifactId>bounded-thread-pool</artifactId>
+    <groupId>dev.aahmedlab</groupId>
+    <artifactId>bounded-executor</artifactId>
     <version>1.0.1</version>
     <packaging>jar</packaging>
     
-    <name>Bounded Thread Pool</name>
-    <description>A thread pool implementation with bounded queue and configurable rejection policies</description>
-    <url>https://github.com/abdol-ahmed/bounded-thread-pool</url>
+    <name>Bounded Executor</name>
+    <description>A bounded executor implementation with bounded queue and configurable rejection policies</description>
+    <url>https://github.com/aahmedlab/bounded-executor</url>
     
     <properties>
         <maven.compiler.source>17</maven.compiler.source>
@@ -275,8 +275,8 @@
     
     <!-- SCM information -->
     <scm>
-        <connection>scm:git:git://github.com/abdol-ahmed/bounded-thread-pool.git</connection>
-        <developerConnection>scm:git:ssh://github.com:abdol-ahmed/bounded-thread-pool.git</developerConnection>
-        <url>https://github.com/abdol-ahmed/bounded-thread-pool/tree/main</url>
+        <connection>scm:git:git://github.com/aahmedlab/bounded-executor.git</connection>
+        <developerConnection>scm:git:ssh://github.com:aahmedlab/bounded-executor.git</developerConnection>
+        <url>https://github.com/aahmedlab/bounded-executor/tree/main</url>
     </scm>
 </project>

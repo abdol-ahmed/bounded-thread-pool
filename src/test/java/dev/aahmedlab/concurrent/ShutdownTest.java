@@ -1,4 +1,4 @@
-package io.github.abdol_ahmed.btp;
+package dev.aahmedlab.concurrent;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -11,18 +11,18 @@ import org.junit.jupiter.api.Test;
 
 class ShutdownTest {
 
-  private BoundedThreadPool pool;
+  private BoundedExecutor pool;
 
   @AfterEach
   void tearDown() throws InterruptedException {
     if (pool != null) {
-      BoundedThreadPoolTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
+      BoundedExecutorTestSupport.shutdownAndAwait(pool, 2, TimeUnit.SECONDS);
     }
   }
 
   @Test
   void shutdownRejectsNewSubmissions() {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
+    pool = BoundedExecutorTestSupport.createBlockingPool(2, 5);
 
     pool.shutdown();
 
@@ -35,13 +35,13 @@ class ShutdownTest {
 
   @Test
   void shutdownCompletesQueuedTasks() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
-    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createBlockingPool(1, 5);
+    var latches = BoundedExecutorTestSupport.createTaskLatches();
     AtomicInteger completedCount = new AtomicInteger(0);
 
     // Submit blocking task
     pool.submit(
-        BoundedThreadPoolTestSupport.createBlockingTask(latches, completedCount::incrementAndGet));
+        BoundedExecutorTestSupport.createBlockingTask(latches, completedCount::incrementAndGet));
 
     assertTrue(latches.started.await(1, TimeUnit.SECONDS));
 
@@ -65,11 +65,11 @@ class ShutdownTest {
 
   @Test
   void shutdownNowReturnsQueuedTasks() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
-    var latches = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createBlockingPool(1, 5);
+    var latches = BoundedExecutorTestSupport.createTaskLatches();
 
     // Submit blocking task
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches, null));
     assertTrue(latches.started.await(1, TimeUnit.SECONDS));
 
     // Submit tasks to queue
@@ -90,13 +90,13 @@ class ShutdownTest {
 
   @Test
   void awaitTerminationWaitsForAllWorkers() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
-    var latches1 = BoundedThreadPoolTestSupport.createTaskLatches();
-    var latches2 = BoundedThreadPoolTestSupport.createTaskLatches();
+    pool = BoundedExecutorTestSupport.createBlockingPool(2, 5);
+    var latches1 = BoundedExecutorTestSupport.createTaskLatches();
+    var latches2 = BoundedExecutorTestSupport.createTaskLatches();
 
     // Submit blocking tasks to both workers
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches1, null));
-    pool.submit(BoundedThreadPoolTestSupport.createBlockingTask(latches2, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches1, null));
+    pool.submit(BoundedExecutorTestSupport.createBlockingTask(latches2, null));
 
     assertTrue(latches1.started.await(1, TimeUnit.SECONDS));
     assertTrue(latches2.started.await(1, TimeUnit.SECONDS));
@@ -118,7 +118,7 @@ class ShutdownTest {
 
   @Test
   void shutdownInterruptsWorkers() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(1, 5);
+    pool = BoundedExecutorTestSupport.createBlockingPool(1, 5);
     AtomicInteger interruptedCount = new AtomicInteger(0);
 
     // Submit task that checks for interruption
@@ -150,7 +150,7 @@ class ShutdownTest {
 
   @Test
   void introspectionMethodsAreCallable() throws Exception {
-    pool = BoundedThreadPoolTestSupport.createBlockingPool(2, 5);
+    pool = BoundedExecutorTestSupport.createBlockingPool(2, 5);
 
     assertEquals(PoolState.RUNNING, pool.getPoolState());
     assertEquals(2, pool.getPoolSize());
