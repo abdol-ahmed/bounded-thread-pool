@@ -28,21 +28,16 @@ jobs:
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
           
-      - name: Import GPG key
-        uses: crazy-max/ghaction-import-gpg@v6
-        with:
-          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
-          passphrase: ${{ secrets.GPG_PASSPHRASE }}
-          git_user_signingkey: true
-          git_commit_gpgsign: true
-          
       - name: Set version from tag
         run: |
           mvn -B -ntp versions:set -DnewVersion=${GITHUB_REF#refs/tags/v} -DgenerateBackupPoms=false
           mvn -B -ntp versions:commit
         
       - name: Build and deploy
-        run: mvn -B -ntp -Prelease clean deploy
+        run: |
+          mvn -B -ntp -Prelease clean deploy \
+            -Dgpg.passphrase="${{ secrets.GPG_PASSPHRASE }}" \
+            -Dgpg.pinentry-mode=loopback
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
