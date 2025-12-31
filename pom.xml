@@ -244,9 +244,6 @@
                                     <gpgArguments>
                                         <arg>--batch</arg>
                                         <arg>--yes</arg>
-                                        <arg>--pinentry-mode</arg>
-                                        <arg>loopback</arg>
-                                        <arg>--no-tty</arg>
                                     </gpgArguments>
                                     <executable>gpg</executable>
                                 </configuration>

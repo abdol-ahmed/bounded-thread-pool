@@ -14,7 +14,6 @@ jobs:
     env:
       MAVEN_USERNAME: ${{ secrets.CENTRAL_USERNAME }}
       MAVEN_PASSWORD: ${{ secrets.CENTRAL_PASSWORD }}
-      GPG_TTY: $(tty)
     steps:
       - uses: actions/checkout@v4
       
@@ -27,29 +26,21 @@ jobs:
           server-id: central
           server-username: MAVEN_USERNAME
           server-password: MAVEN_PASSWORD
-          
+
+      - name: Set GPG_TTY
+        run: echo "GPG_TTY=$(tty)" >> $GITHUB_ENV
+
       - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v6
+        with:
+          gpg_private_key: ${{ secrets.GPG_PRIVATE_KEY }}
+          passphrase: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: Verify GPG secret key is available
         run: |
-          echo "Checking if GPG secrets are available..."
-          if [ -z "${{ secrets.GPG_PRIVATE_KEY }}" ]; then
-            echo "ERROR: GPG_PRIVATE_KEY secret is not set"
-            exit 1
-          fi
-          if [ -z "${{ secrets.GPG_PASSPHRASE }}" ]; then
-            echo "ERROR: GPG_PASSPHRASE secret is not set"
-            exit 1
-          fi
-          
-          echo "Importing GPG private key..."
-          echo "${{ secrets.GPG_PRIVATE_KEY }}" | gpg --batch --import --no-tty --passphrase "${{ secrets.GPG_PASSPHRASE }}" || echo "Import attempt completed"
-          
-          echo "Listing imported keys..."
-          gpg --list-secret-keys --keyid-format LONG || echo "No secret keys found"
-          
-          echo "Configuring GPG agent..."
-          mkdir -p ~/.gnupg
-          echo "allow-loopback-pinentry" >> ~/.gnupg/gpg-agent.conf
-          gpg-connect-agent reloadagent /bye || echo "Agent reload completed"
+          gpg --list-secret-keys --keyid-format LONG
+          test -n "${{ steps.import_gpg.outputs.fingerprint }}"
           
       - name: Set version from tag
         run: |
@@ -58,10 +49,8 @@ jobs:
         
       - name: Build and deploy
         run: |
-          echo "Starting Maven build with debug logging..."
-          mvn -B -ntp -Prelease clean deploy -X \
-            -Dgpg.pinentry-mode=loopback \
-            -Dgpg.executable=gpg
+          mvn -B -ntp -Prelease clean deploy \
+            -Dgpg.keyname="${{ steps.import_gpg.outputs.fingerprint }}"
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
