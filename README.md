@@ -89,85 +89,14 @@ public class Main {
 }
 ```
 
-## Usage Examples
+## Detailed Documentation
 
-### Factory Methods (Recommended)
+For comprehensive information about guarantees, overload policies, and testing, see the [detailed library documentation](docs/bounded-executor.md).
 
-```java
-// Create a bounded executor with default BLOCK policy
-BoundedExecutor pool = BoundedExecutor.create(4, 100);
-
-// Create a fixed-size executor with CALLER_RUNS policy
-BoundedExecutor pool = BoundedExecutor.createFixed(8);
-
-// Create an executor optimized for CPU-bound tasks
-BoundedExecutor pool = BoundedExecutor.createCpuBound();
-
-// Create an executor optimized for I/O-bound tasks
-BoundedExecutor pool = BoundedExecutor.createIoBound();
-```
-
-### Submitting Tasks
-
-```java
-// Submit a simple task
-pool.submit(() -> {
-    System.out.println("Task executed in: " + Thread.currentThread().getName());
-});
-
-// Submit a task with parameters
-String message = "Hello";
-pool.submit(() -> {
-    System.out.println(message);
-});
-```
-
-### Rejection Policies
-
-```java
-// BLOCK: Wait for space in queue (default)
-BoundedExecutor pool1 = new BoundedExecutor(2, 10, RejectionPolicy.BLOCK);
-
-// ABORT: Throw RejectedExecutionException if queue is full
-BoundedExecutor pool2 = new BoundedExecutor(2, 10, RejectionPolicy.ABORT);
-
-// DISCARD: Silently discard task if queue is full
-BoundedExecutor pool3 = new BoundedExecutor(2, 10, RejectionPolicy.DISCARD);
-
-// DISCARD_OLDEST: Remove oldest task and add new one if queue is full
-BoundedExecutor pool4 = new BoundedExecutor(2, 10, RejectionPolicy.DISCARD_OLDEST);
-
-// CALLER_RUNS: Execute task in caller thread if queue is full
-BoundedExecutor pool5 = new BoundedExecutor(2, 10, RejectionPolicy.CALLER_RUNS);
-```
-
-### Shutdown Patterns
-
-```java
-// Graceful shutdown - completes all queued tasks
-pool.shutdown();
-if (!pool.awaitTermination(10, TimeUnit.SECONDS)) {
-    // Optional: force shutdown if graceful takes too long
-    List<Runnable> remaining = pool.shutdownNow();
-    System.out.println("Unexecuted tasks: " + remaining.size());
-}
-
-// Immediate shutdown - interrupts workers
-List<Runnable> unexecuted = pool.shutdownNow();
-```
-
-### Monitoring
-
-```java
-// Check pool state
-System.out.println("Pool size: " + pool.getPoolSize());
-System.out.println("Queue size: " + pool.getQueueSize());
-System.out.println("Queue remaining capacity: " + pool.getQueueRemainingCapacity());
-System.out.println("Is queue full? " + pool.isQueueFull());
-System.out.println("Is running? " + pool.isRunning());
-System.out.println("Is shutdown? " + pool.isShutdown());
-System.out.println("Is terminated? " + pool.isTerminated());
-```
+- **What It Guarantees**: Bounded queue semantics and shutdown behavior
+- **Overload Policies**: Complete guide with examples for all rejection policies  
+- **Verification Notes**: How to test saturation and verify behavior safely
+- **Performance Testing**: Guidelines for throughput and memory testing
 
 ## Building from Source
 
@@ -306,39 +235,6 @@ This project follows [Semantic Versioning](https://semver.org/).
 
 Versions are published using git tags in the form `vX.Y.Z`.
 
-## Best Practices
-
-1. **Choose the Right Policy**:
-   - Use `BLOCK` for rate limiting
-   - Use `ABORT` for fail-fast scenarios
-   - Use `CALLER_RUNS` for responsive UIs
-   - Use `DISCARD` for lossy data pipelines
-
-2. **Always Shutdown**:
-   ```java
-   try (BoundedExecutor pool = BoundedExecutor.createFixed(4)) {
-       // Use pool
-   } // Automatically calls shutdown()
-   ```
-
-3. **Monitor Pool State**:
-   ```java
-   if (pool.isQueueFull()) {
-       // Handle backpressure
-       logger.warn("Queue is full, consider throttling");
-   }
-   ```
-
-4. **Handle Interruptions**:
-   ```java
-   try {
-       pool.submit(task);
-   } catch (InterruptedException e) {
-       Thread.currentThread().interrupt();
-       // Handle interruption gracefully
-   }
-   ```
-
 ## License
 
 Apache License 2.0
@@ -424,5 +320,8 @@ Release secrets are expected to be stored in the GitHub Environment named `relea
 
 ## Additional Resources
 
-- [USAGE.md](USAGE.md) - Detailed usage examples
+- [docs/index.md](docs/index.md) - Library index and overview
+- [docs/bounded-executor.md](docs/bounded-executor.md) - Detailed library documentation
+- [USAGE.md](USAGE.md) - Basic usage examples
+- [CONCURRENCY_DESIGN.md](CONCURRENCY_DESIGN.md) - Implementation details and design patterns
 - [VERSIONING.md](VERSIONING.md) - Version management guide
