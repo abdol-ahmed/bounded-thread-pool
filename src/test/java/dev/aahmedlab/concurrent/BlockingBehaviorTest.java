@@ -29,7 +29,7 @@ class BlockingBehaviorTest {
     pool.submit(() -> {});
 
     ExecutorService es = Executors.newSingleThreadExecutor();
-    Future<?> blockedSubmit =
+    java.util.concurrent.Future<?> blockedSubmit =
         es.submit(
             () -> {
               try {

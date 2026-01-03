@@ -2,6 +2,7 @@ package dev.aahmedlab.concurrent;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 import java.util.concurrent.RejectedExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.locks.ReentrantLock;
@@ -167,6 +168,29 @@ public final class BoundedExecutor {
     if (shouldRunInCaller) {
       task.run();
     }
+  }
+
+  public <T> Future<T> submit(Callable<T> task) throws InterruptedException {
+    if (task == null) throw new NullPointerException("task");
+
+    // Create the future
+    CompletableFuture<T> future = new CompletableFuture<>(); // ← create it NOW
+
+    // Wrap the task to capture its result
+    Runnable wrapper =
+        () -> {
+          try {
+            T result = task.call();
+            future.setResult(result); // ← worker stores result in the future
+          } catch (Exception e) {
+            future.setException(e); // ← or store the exception
+          }
+        };
+
+    // Submit the wrapper to the queue (reuse your existing submit(Runnable))
+    submit(wrapper);
+
+    return future; // ← return immediately to caller
   }
 
   /**
