@@ -87,7 +87,7 @@ class EdgeCaseTest {
   }
 
   @Test
-  void minimumValidParameters() throws Exception {
+  void minimumValidParameters() {
     // Test with minimum valid values
     pool = new BoundedExecutor(1, 1, RejectionPolicy.BLOCK);
 
@@ -176,46 +176,40 @@ class EdgeCaseTest {
   }
 
   @Test
-  void submitNullTask() throws Exception {
+  void submitNullTask() {
     pool = new BoundedExecutor(1, 10, RejectionPolicy.ABORT);
 
-    assertThrows(
-        NullPointerException.class,
-        () -> {
-          pool.submit(null);
-        });
+    assertThrows(NullPointerException.class, () -> pool.submit((Runnable) null));
   }
 
   @Test
-  void submitAfterShutdown() throws Exception {
+  void submitAfterShutdown() {
     pool = new BoundedExecutor(1, 10, RejectionPolicy.ABORT);
 
     pool.shutdown();
 
     assertThrows(
         RejectedExecutionException.class,
-        () -> {
-          pool.submit(
-              () -> {
-                // Should not execute
-              });
-        });
+        () ->
+            pool.submit(
+                () -> {
+                  // Should not execute
+                }));
   }
 
   @Test
-  void submitAfterShutdownNow() throws Exception {
+  void submitAfterShutdownNow() {
     pool = new BoundedExecutor(1, 10, RejectionPolicy.ABORT);
 
     pool.shutdownNow();
 
     assertThrows(
         RejectedExecutionException.class,
-        () -> {
-          pool.submit(
-              () -> {
-                // Should not execute
-              });
-        });
+        () ->
+            pool.submit(
+                () -> {
+                  // Should not execute
+                }));
   }
 
   @Test
@@ -228,7 +222,7 @@ class EdgeCaseTest {
   }
 
   @Test
-  void multipleShutdownCalls() throws Exception {
+  void multipleShutdownCalls() {
     pool = new BoundedExecutor(2, 10, RejectionPolicy.BLOCK);
 
     pool.shutdown();
@@ -281,19 +275,13 @@ class EdgeCaseTest {
 
     // Fill the queue with a second task
     CountDownLatch secondTaskSubmitted = new CountDownLatch(1);
-    pool.submit(
-        () -> {
-          secondTaskSubmitted.countDown();
-        });
+    pool.submit(secondTaskSubmitted::countDown);
 
     // Next task should run in caller thread (3rd task)
     Thread callerThread = Thread.currentThread();
     AtomicInteger taskThread = new AtomicInteger();
 
-    pool.submit(
-        () -> {
-          taskThread.set(Thread.currentThread().hashCode());
-        });
+    pool.submit(() -> taskThread.set(Thread.currentThread().hashCode()));
 
     assertEquals(callerThread.hashCode(), taskThread.get());
 
