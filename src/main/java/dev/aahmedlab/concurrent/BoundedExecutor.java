@@ -1,5 +1,6 @@
 package dev.aahmedlab.concurrent;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.RejectedExecutionException;
@@ -240,6 +241,9 @@ public final class BoundedExecutor {
    * @throws InterruptedException if interrupted while waiting
    * @since 1.0.0
    */
+  @SuppressFBWarnings(
+      value = "CWO_CLOSED_WITHOUT_OPENED",
+      justification = "Lock is properly acquired before the try block and released in finally")
   public boolean awaitTermination(long timeout, TimeUnit unit) throws InterruptedException {
     long deadlineNanos = System.nanoTime() + unit.toNanos(timeout);
     for (Thread workerThread : workerThreads) {

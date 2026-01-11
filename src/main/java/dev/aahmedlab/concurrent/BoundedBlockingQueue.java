@@ -1,5 +1,6 @@
 package dev.aahmedlab.concurrent;
 
+import edu.umd.cs.findbugs.annotations.SuppressFBWarnings;
 import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
@@ -81,6 +82,9 @@ final class BoundedBlockingQueue<T> {
     }
   }
 
+  @SuppressFBWarnings(
+      value = "CWO_CLOSED_WITHOUT_OPENED",
+      justification = "Lock is properly acquired before the try block and released in finally")
   public boolean tryPut(T task) {
     if (task == null) throw new NullPointerException("task");
     lock.lock();
