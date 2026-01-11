@@ -12,7 +12,7 @@
     <packaging>jar</packaging>
     
     <name>Bounded Executor</name>
-    <description>A bounded executor implementation with bounded queue and configurable rejection policies</description>
+    <description>A bounded executor implementation with a bounded queue and configurable rejection policies</description>
     <url>https://github.com/aahmedlab/bounded-executor</url>
     
     <properties>
